@@ -66,6 +66,20 @@ the input text.  This means that you should avoid flags like
 `-d', for example."
   :type '(repeat string))
 
+(defcustom shfmt-use-sh-basic-offset t
+  "Use `sh-basic-offset' when adjusting indentation.
+When non-nil, shfmt will automatically align the indentation to match the value
+of 'sh-basic-offset'."
+  :type 'boolean)
+
+(defun shfmt--args (input-file)
+  "Get shfmt arguments. INPUT-FILE is the bash/sh file."
+  (append
+   (list "--filename" input-file)
+   (when (and shfmt-use-sh-basic-offset (boundp 'sh-basic-offset))
+     (list "-i" (number-to-string sh-basic-offset)))
+   shfmt-arguments))
+
 
 ;; Commands for reformatting
 
@@ -75,7 +89,8 @@ the input text.  This means that you should avoid flags like
 (reformatter-define shfmt
   :program shfmt-command
   ;; Pass the filename to `shfmt` as it may influence the Editorconfig pattern "shfmt" picks up
-  :args (append (list "--filename" (or (buffer-file-name) input-file)) shfmt-arguments)
+  :args (shfmt--args (or (buffer-file-name (buffer-base-buffer))
+                         input-file))
   :lighter " ShFmt"
   :group 'shfmt)
 
